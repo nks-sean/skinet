@@ -1,0 +1,23 @@
+using System;
+using System.Text.Json;
+using Core.Entities;
+using Microsoft.Identity.Client;
+
+namespace Infrastructure.Data;
+
+public class StoreContextSeed
+{
+    public static async Task SeedAsync(StoreContext context)
+    {
+        if (!context.Products.Any())
+        {
+            var productsData = await File.ReadAllTextAsync("../Infrastructure/Data/SeedData/products.json");
+            var products = JsonSerializer.Deserialize<List<Product>>(productsData);
+            if (products != null)
+            {
+                context.AddRange(products);
+                await context.SaveChangesAsync();
+            }
+        }
+    }
+}
