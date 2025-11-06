@@ -1,25 +1,21 @@
+using API.RequestHelper;
 using Core.Entities;
 using Core.Interfaces;
 using Core.Specification;
-using Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers;
 
-[ApiController]
-[Route("api/[controller]")]
-public class ProductsController(IGenericRepository<Product> repo) : ControllerBase
+public class ProductsController(IGenericRepository<Product> repo) : BaseApiController
 {
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<Product>>> GetProducts(string? brand = null, string? type = null, string? sort = null)
+    public async Task<ActionResult<IReadOnlyList<Product>>> GetProducts([FromQuery]ProductSpecParams specParams)
     {
-        ProductSpecification spec = new ProductSpecification(brand, type, sort);
-        var products = await repo.GetListAsync(spec);
-        return Ok(products);
+        ProductSpecification spec = new ProductSpecification(specParams);
+        return await CreatePagedResult(repo, spec, specParams.PageIndex, specParams.PageSize);
     }
 
-    [HttpGet("{id:int}")] //api/products/2
+    [HttpGet("{id:int}")]
     public async Task<ActionResult<Product>> GetProduct(int id)
     {
         var product = await repo.GetByIdAsync(id);
@@ -27,7 +23,7 @@ public class ProductsController(IGenericRepository<Product> repo) : ControllerBa
         return product;
     }
 
-    [HttpPost] //api/products/2
+    [HttpPost]
     public async Task<ActionResult<Product>> CreateProduct(Product product)
     {
         repo.Add(product);
